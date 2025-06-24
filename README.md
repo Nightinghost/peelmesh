@@ -146,6 +146,9 @@ help(pm)
 
 This project includes an interactive GUI demo for mesh segmentation. The tool allows you to manually define landmarks and extract a sub-mesh from a closed boundary on the surface.
 
+> ✅ Demo binaries are available under the [Releases page](https://github.com/Nightinghost/peelmesh/releases/tag/v1.0.0).</br>
+> Please refer to the included README.md inside the zip file for usage instructions.
+
 ![](./imgs/interactive_demo.gif)
 
 ### ✨ Features
