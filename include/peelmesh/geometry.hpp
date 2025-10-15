@@ -166,6 +166,9 @@ namespace peelmesh
         std::vector<double> MinPrincipalCurvature();
         std::vector<double> MaxPrincipalCurvature();
 
+        std::tuple<std::vector<int>, std::vector<int>> GetOneRingNeighborIndicesStartFrom(int center_idx, int first_neighbor_idx);
+        std::tuple<std::vector<int>, std::vector<int>> GetOneRingNeighborIndices(int center_idx);
+
     private:
         void FreeVertex(Vertex *v);
         void FreeHalfEdge(HalfEdge *he);

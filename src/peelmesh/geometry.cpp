@@ -420,6 +420,10 @@ namespace peelmesh
         UpdateVertexOutgoingHalfEdges(vertices);
     }
 
+    /// @brief Find edge with given start and end vertex indices as endpoints, direction is not guaranteed.
+    /// @param start
+    /// @param end
+    /// @return an halfedge related to the edge [start, end] or nullptr if not found.
     TriangleMesh::HalfEdge *TriangleMesh::findEdge(int start, int end)
     {
         if (start > end)
@@ -432,6 +436,10 @@ namespace peelmesh
             return it->second;
     }
 
+    /// @brief Find halfedge with given start and end vertex indices, start -> end
+    /// @param start startpoint index
+    /// @param end endpoint index
+    /// @return halfedge from 'start' to 'end' or nullptr if not found
     TriangleMesh::HalfEdge *TriangleMesh::findHalfEdge(int start, int end)
     {
         int a = start, b = end;
@@ -460,6 +468,10 @@ namespace peelmesh
         }
     }
 
+    /// @brief Find halfedge with given 'start' and 'end' vertex, start -> end
+    /// @param start start vertex
+    /// @param end  end vertex
+    /// @return halfedge from 'start' to 'end' or nullptr if not found
     TriangleMesh::HalfEdge *TriangleMesh::findHalfEdge(Vertex *start, Vertex *end)
     {
         return findHalfEdge(start->index, end->index);
@@ -908,4 +920,61 @@ namespace peelmesh
         return solver->GetVertexMaxPrincipalCurvature();
     }
 
+    std::tuple<std::vector<int>, std::vector<int>> TriangleMesh::GetOneRingNeighborIndicesStartFrom(int center_idx, int first_neighbor_idx)
+    {
+        auto he = findEdge(center_idx, first_neighbor_idx);
+        if (he == nullptr)
+            return {};
+
+        std::vector<int> counterclockwise_vec, clockwise_vec;
+
+        he = findHalfEdge(center_idx, first_neighbor_idx);
+        if (he)
+        {
+            counterclockwise_vec.push_back(he->target->index);
+            auto curr_he = he;
+            do
+            {
+                int idx = curr_he->next->target->index;
+                if (idx == first_neighbor_idx)
+                    break;
+
+                counterclockwise_vec.push_back(idx);
+
+                curr_he = curr_he->prev->twin;
+            } while (curr_he != nullptr);
+        }
+
+        auto twin_he = findHalfEdge(first_neighbor_idx, center_idx);
+        if (twin_he)
+            clockwise_vec.push_back(first_neighbor_idx);
+        auto curr_he = twin_he;
+        while (curr_he != nullptr)
+        {
+            int idx = curr_he->next->target->index;
+            if (idx == first_neighbor_idx)
+                break;
+            clockwise_vec.push_back(idx);
+            curr_he = curr_he->next->twin;
+        }
+        // clockwise_vec.push_back(he->target->index);
+        // curr_he = he->twin;
+        // while (curr_he != nullptr)
+        // {
+        //     int idx = curr_he->next->target->index;
+        //     if (idx == he->target->index)
+        //         break;
+        //     clockwise_vec.push_back(idx);
+        //     curr_he = curr_he->next->twin;
+        // }
+
+        return {counterclockwise_vec, clockwise_vec};
+    }
+
+    std::tuple<std::vector<int>, std::vector<int>> TriangleMesh::GetOneRingNeighborIndices(int center_idx)
+    {
+        auto he = vertices[center_idx].halfedge;
+
+        return GetOneRingNeighborIndicesStartFrom(center_idx, he->target->index);
+    }
 } // namespace peelmesh

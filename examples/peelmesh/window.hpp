@@ -99,7 +99,7 @@ namespace peelmesh
 
                         rendering::MaterialRecord geo_mat;
                         geo_mat.shader = "unlitLine";
-                        geo_mat.line_width = 3.0f;
+                        geo_mat.line_width = 6.0f;
 
                         this->GetScene()->AddGeometry("geodesic_tmp", line.get(), geo_mat);
                     };
@@ -184,7 +184,51 @@ namespace peelmesh
 
                     segments_.push_back(mesh);
                     segment_names.push_back("segment" + std::to_string(segments_.size() - 1));
-                    this->GetScene()->AddGeometry(segment_names.back(), mesh.get(), {});
+
+                    rendering::MaterialRecord mat;
+                    mat.shader = "defaultLit";
+                    this->GetScene()->AddGeometry(segment_names.back(), mesh.get(), mat);
+                }
+            }
+            else if (e.key == gui::KeyName::KEY_A && e.type == gui::KeyEvent::DOWN)
+            {
+                if (!boundaries.empty())
+                {
+                    for (auto &boundary : boundaries)
+                    {
+                        if (boundary.size() < 1)
+                            break;
+
+                        // if (boundary.front() != boundary.back())
+                        //     boundary.push_back(boundary.front());
+
+                        for (int i = 0; i < boundary.size() - 1; i++)
+                        {
+                            pipe_->AddGeodesicPath(boundary[i], boundary[i + 1]);
+                        }
+                    }
+                }
+
+                auto segments = pipe_->AutoSegmentation();
+
+                for (auto &segment : segments)
+                {
+                    const auto &[verts, tris] = segment->getMeshData();
+                    auto mesh = std::make_shared<open3d::geometry::TriangleMesh>(verts, tris);
+
+                    mesh->PaintUniformColor({rand() % 255 / 255.0, rand() % 255 / 255.0, rand() % 255 / 255.0});
+                    mesh->ComputeVertexNormals();
+                    for (int i = 0; i < mesh->vertices_.size(); i++)
+                    {
+                        mesh->vertices_[i] += 0.02 * mesh->vertex_normals_[i];
+                    }
+
+                    segments_.push_back(mesh);
+                    segment_names.push_back("segment" + std::to_string(segments_.size() - 1));
+
+                    rendering::MaterialRecord mat;
+                    mat.shader = "defaultLit";
+                    this->GetScene()->AddGeometry(segment_names.back(), mesh.get(), mat);
                 }
             }
             return gui::SceneWidget::Key(e);
@@ -264,7 +308,9 @@ namespace peelmesh
             auto mesh = std::make_shared<open3d::geometry::TriangleMesh>(verts, tris);
             mesh->ComputeVertexNormals();
             main_scene_->GetScene()->RemoveGeometry("mesh");
-            main_scene_->GetScene()->AddGeometry("mesh", mesh.get(), {});
+            rendering::MaterialRecord mat;
+            mat.shader = "defaultLit";
+            main_scene_->GetScene()->AddGeometry("mesh", mesh.get(), mat);
 
             auto wire = open3d::geometry::LineSet::CreateFromTriangleMesh(*mesh);
             wire->PaintUniformColor({1, 1, 1});

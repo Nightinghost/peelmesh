@@ -38,7 +38,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 option(PEELMESH_BUILD_UNIT_TESTS "Build unit tests" OFF)
 option(PEELMESH_BUILD_PYTHON_MODULE "Build Python module" OFF)
-option(PEELMESH_BUILD_EXAMPLES "Build examples" OFF)
+
+if(SKBUILD)
+    message(STATUS "Building via scikit-build-core, enabling Python module")
+    set(PEELMESH_BUILD_PYTHON_MODULE ON CACHE BOOL "Build Python module" FORCE)
+else()
+    option(PEELMESH_BUILD_PYTHON_MODULE "Build Python module" OFF)
+endif()
 
 add_subdirectory(external)
 add_subdirectory(src)

@@ -41,3 +41,6 @@ if(${Open3D_VERSION} VERSION_GREATER_EQUAL "0.19.0")
         $<TARGET_FILE_DIR:demo>/tbb12_debug.dll
     )
 endif()
+
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE visualization)

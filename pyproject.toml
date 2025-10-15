@@ -1,0 +1,21 @@
+[build-system]
+requires = ["scikit-build-core >=0.5.1", "pybind11", "setuptools", "wheel", "pybind11-stubgen"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "peelmesh"
+version = "0.1.0"
+description = "PeelMesh: Efficient Interactive Mesh Segmentation"
+authors = [{ name = "Junjie Yin" }]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+
+[tool.scikit-build]
+# scikit-build-core 会自动调用你的 CMakeLists.txt
+cmake.verbose = true
+wheel.expand-macos-universal-tags = true
+
+
+# 指定 Python 模块所在路径（与你的 bindings 输出一致）
+install.components = ["python"]
