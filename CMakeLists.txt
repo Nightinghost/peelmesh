@@ -39,6 +39,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 option(PEELMESH_BUILD_UNIT_TESTS "Build unit tests" OFF)
 option(PEELMESH_BUILD_PYTHON_MODULE "Build Python module" OFF)
 
+set(PEELMESH_EXT_GEOMETRY_CENTRAL_SRC "" CACHE PATH "downloaded geometry-central source directory")
+
 if(SKBUILD)
     message(STATUS "Building via scikit-build-core, enabling Python module")
     set(PEELMESH_BUILD_PYTHON_MODULE ON CACHE BOOL "Build Python module" FORCE)
