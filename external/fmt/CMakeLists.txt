@@ -1,11 +1,11 @@
 include(FetchContent)
 
-if(PEELMESH_EXT_FMT_SOURCE_DIR AND EXISTS ${PEELMESH_EXT_FMT_SOURCE_DIR}/CMakeLists.txt)
-    message(STATUS "Using external fmt source dir: ${PEELMESH_EXT_FMT_SOURCE_DIR}")
+if(PEELMESH_EXT_FMT_SRC AND EXISTS ${PEELMESH_EXT_FMT_SRC}/CMakeLists.txt)
+    message(STATUS "Using external fmt source dir: ${PEELMESH_EXT_FMT_SRC}")
 
     FetchContent_Declare(
         fmtlib
-        SOURCE_DIR "${PEELMESH_EXT_FMT_SOURCE_DIR}"
+        SOURCE_DIR "${PEELMESH_EXT_FMT_SRC}"
 
         CMAKE_ARGS
             -DCMAKE_CXX_STANDARD=${EXTERNAL_CXX_STANDARD}
