@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\32af86c9337b997ba5c9c4747007291f\eigen-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\53863aa9c5e532fb132d4878c36c3f66\eigen-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\d39cd770a132ae4dfbe859ef79a45760\eigen-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\Project\archive\peelmesh_archive\build_t\_deps\eigen-subbuild\CMakeFiles\eigen-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{AED40236-DDB7-3D0A-AA7E-E4E6838F8346}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

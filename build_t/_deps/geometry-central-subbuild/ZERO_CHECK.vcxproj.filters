@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\Project\archive\peelmesh_archive\build_t\_deps\geometry-central-subbuild\CMakeFiles\99ac97b6d47202da195e249dcd40f41c\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{CE9D9724-55EF-3E0F-9DCF-DD5E305EA182}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

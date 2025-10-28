@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/geometry-central-populate"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/99ac97b6d47202da195e249dcd40f41c/geometry-central-populate.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/c4291beaa7f6ed17aa8d1dad66d43b5a/geometry-central-populate-complete.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-build.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-configure.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-download.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-install.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-mkdir.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-patch.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-test.rule"
+		},
+		{
+			"file" : "D:/Project/archive/peelmesh_archive/build_t/_deps/geometry-central-subbuild/CMakeFiles/34e2cc167f6cd2b0842bd7a6672406b0/geometry-central-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"geometry-central-populate"
+		],
+		"name" : "geometry-central-populate"
+	}
+}
