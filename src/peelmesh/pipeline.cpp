@@ -1,6 +1,7 @@
 #include <peelmesh/pipeline.hpp>
 
-#include <format>
+// #include <format>
+#include <peelmesh/config.hpp>
 
 namespace peelmesh
 {
@@ -569,7 +570,7 @@ namespace peelmesh
             }
             else
             {
-                std::cout << std::format("[PeelMeshPipeline] Path [{}]-[{}] is not added to the mesh.\n\tExtraction failed!", boundary_points[i], boundary_points[i + 1]) << std::endl;
+                std::cout << pm_format::format("[PeelMeshPipeline] Path [{}]-[{}] is not added to the mesh.\n\tExtraction failed!", boundary_points[i], boundary_points[i + 1]) << std::endl;
                 return std::make_shared<TriangleMesh>();
             }
         }

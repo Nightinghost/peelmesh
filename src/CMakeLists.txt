@@ -1,4 +1,5 @@
 set(PEELMESH_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/peelmesh/config.hpp
     ${CMAKE_SOURCE_DIR}/include/peelmesh/geometry.hpp
     ${CMAKE_SOURCE_DIR}/include/peelmesh/kdtree.hpp
     ${CMAKE_SOURCE_DIR}/include/peelmesh/meshio.hpp
@@ -30,7 +31,8 @@ target_include_directories(peelmesh
 )
 
 target_link_libraries(peelmesh PUBLIC eigen
-    PRIVATE geometry-central)
+    PRIVATE geometry-central ${FORMAT_DEP}
+)
 
 find_package(Open3D CONFIG)
 
