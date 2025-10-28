@@ -55,6 +55,7 @@ option(PEELMESH_BUILD_PYTHON_MODULE "Build Python module" OFF)
 option(PEELMESH_BUILD_EXAMPLES "Build examples" OFF)
 
 set(PEELMESH_EXT_GEOMETRY_CENTRAL_SRC "" CACHE PATH "downloaded geometry-central source directory")
+set(PEELMESH_EXT_FMT_SOURCE_DIR "" CACHE PATH "downloaded fmt source directory")
 
 if(SKBUILD)
     message(STATUS "Building via scikit-build-core, enabling Python module")
