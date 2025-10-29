@@ -45,6 +45,8 @@ option(PEELMESH_BUILD_EXAMPLES "Build examples" OFF)
 
 set(PEELMESH_EXT_GEOMETRY_CENTRAL_SRC "" CACHE PATH "downloaded geometry-central source directory")
 set(PEELMESH_EXT_FMT_SRC "" CACHE PATH "downloaded fmt source directory")
+set(PEELMESH_EXT_PYBIND11_SRC "" CACHE PATH "downloaded pybind11 source directory")
+set(PEELMESH_EXT_GOOGLE_TEST_SRC "" CACHE PATH "downloaded googletest source directory")
 
 if(SKBUILD)
     message(STATUS "Building via scikit-build-core, enabling Python module")

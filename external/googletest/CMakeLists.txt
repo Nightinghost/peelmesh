@@ -1,19 +1,30 @@
 include(FetchContent)
-
 set(FETCHCONTENT_QUIET FALSE)
-FetchContent_Declare(
-    googletest
 
-    # PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/../../.deps/googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1
-    GIT_PROGRESS TRUE
-    GIT_SHALLOW TRUE
+if(PEELMESH_EXT_GOOGLE_TEST_SRC AND EXISTS ${PEELMESH_EXT_GOOGLE_TEST_SRC}/CMakeLists.txt)
+    message(STATUS "Using local googletest source directory: ${PEELMESH_EXT_GOOGLE_TEST_SRC}")
 
-    EXCLUDE_FROM_ALL
+    FetchContent_Declare(
+        googletest
+        SOURCE_DIR ${PEELMESH_EXT_GOOGLE_TEST_SRC}
+        GIT_SHALLOW FALSE
+        GIT_PROGRESS FALSE
 
-    # CMAKE_ARGS
-    # -DCMAKE_CXX_STANDARD=${EXTERNAL_CXX_STANDARD}
-)
+        EXCLUDE_FROM_ALL
+    )
+
+else()
+    FetchContent_Declare(
+        googletest
+
+        # PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/../../.deps/googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+        GIT_PROGRESS TRUE
+        GIT_SHALLOW TRUE
+
+        EXCLUDE_FROM_ALL
+    )
+endif()
 
 FetchContent_MakeAvailable(googletest)
