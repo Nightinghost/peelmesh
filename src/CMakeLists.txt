@@ -1,5 +1,4 @@
 set(PEELMESH_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/peelmesh/config.hpp
     ${CMAKE_SOURCE_DIR}/include/peelmesh/geometry.hpp
     ${CMAKE_SOURCE_DIR}/include/peelmesh/kdtree.hpp
     ${CMAKE_SOURCE_DIR}/include/peelmesh/meshio.hpp
@@ -19,8 +18,6 @@ set(PEELMESH_SOURCES
 add_library(peelmesh)
 target_sources(peelmesh
     PRIVATE ${PEELMESH_SOURCES}
-
-    # PUBLIC ${PEELMESH_HEADERS}
 )
 target_include_directories(peelmesh
     PUBLIC
@@ -28,17 +25,12 @@ target_include_directories(peelmesh
         $<INSTALL_INTERFACE:include>
         $<INSTALL_INTERFACE:include/deps/nanoflann>
         $<INSTALL_INTERFACE:include/deps/geometrycentral>
+        $<INSTALL_INTERFACE:include/deps/fmt>
 )
 
 target_link_libraries(peelmesh PUBLIC eigen
-    PRIVATE geometry-central ${FORMAT_DEP}
+    PRIVATE geometry-central fmt::fmt
 )
-
-find_package(Open3D CONFIG)
-
-if(Open3D_FOUND)
-    target_link_libraries(peelmesh PUBLIC Open3D::Open3D)
-endif()
 
 if(PEELMESH_BUILD_PYTHON_MODULE)
     add_subdirectory(bindings)

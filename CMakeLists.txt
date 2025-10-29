@@ -33,18 +33,7 @@ endif()
 include(CheckIncludeFileCXX)
 check_include_file_cxx("format" HAVE_STD_FORMAT)
 
-# set(PEELMESH_NEED_FORMAT)
-if(HAVE_STD_FORMAT)
-    message(STATUS "---std::format (C++20) is available. Using the standard library.")
-    add_compile_definitions(USE_STD_FORMAT)
-    set(PEELMESH_NEED_FMTLIB OFF CACHE BOOL "whether download fmtlib") # 依赖库为空
-    set(FORMAT_DEP "")
-else()
-    message(STATUS "---std::format (C++20) is NOT available. Falling back to fmtlib.")
-    add_compile_definitions(USE_FMT_FORMAT)
-    set(PEELMESH_NEED_FMTLIB ON CACHE BOOL "whether download fmtlib")
-endif()
-
+# set(FORMAT_DEP "" CACHE INTERNAL "fmt dependency")
 include(GNUInstallDirs)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
@@ -78,7 +67,7 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
-install(TARGETS peelmesh geometry-central nanort nanoflann happly eigen
+install(TARGETS peelmesh geometry-central nanort nanoflann happly eigen fmt
         EXPORT peelmeshTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -94,6 +83,10 @@ install(DIRECTORY ${geometry-central_SOURCE_DIR}/deps/nanoflann/include/
 )
 install(DIRECTORY ${geometry-central_SOURCE_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/geometrycentral
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/fmt
 )
 
 if(PEELMESH_BUILD_EXAMPLES)

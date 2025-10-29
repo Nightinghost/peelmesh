@@ -23,4 +23,3 @@ else()
 endif()
 
 FetchContent_MakeAvailable(fmtlib)
-set(FORMAT_DEP fmt::fmt)

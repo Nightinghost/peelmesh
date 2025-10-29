@@ -1,6 +1,4 @@
-if(PEELMESH_NEED_FMTLIB)
-    add_subdirectory(fmt)
-endif()
+add_subdirectory(fmt)
 
 add_subdirectory(geometry-central)
 

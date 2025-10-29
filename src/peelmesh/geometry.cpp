@@ -9,7 +9,7 @@
 #include <functional>
 #include <memory>
 
-#include <peelmesh/config.hpp>
+#include <fmt/format.h>
 
 namespace peelmesh
 {
@@ -843,29 +843,29 @@ namespace peelmesh
             {
                 auto &v = vertices[i];
                 auto &x = v.position;
-                os << pm_format::format("{}:\tindex: {}\t pos: ({}, {}, {})\t halfedge: {}\t alive: {}\n", i, v.index, x[0], x[1], x[2], v.halfedge->index, v.isActive);
+                os << fmt::format("{}:\tindex: {}\t pos: ({}, {}, {})\t halfedge: {}\t alive: {}\n", i, v.index, x[0], x[1], x[2], v.halfedge->index, v.isActive);
             }
         }
 
         if (print_halfedge)
         {
-            os << pm_format::format("Halfedges:\tHalfedge Size: {}\tEdgeMap Size: {}\n", halfEdges.size(), edgeMap.size()) << std::endl;
+            os << fmt::format("Halfedges:\tHalfedge Size: {}\tEdgeMap Size: {}\n", halfEdges.size(), edgeMap.size()) << std::endl;
             for (int i = 0; i < halfEdges.size(); i++)
             {
                 auto &e = halfEdges[i];
-                os << pm_format::format("{}:\t index: {}\t target: {}\t face: {}\t next: {}\t prev: {}\t twin: {}\t alive: {}\n",
-                                        i, e.index, e.target->index, e.face->index, e.next->index, e.prev->index,
-                                        e.twin != nullptr ? e.twin->index : -1, e.isActive);
+                os << fmt::format("{}:\t index: {}\t target: {}\t face: {}\t next: {}\t prev: {}\t twin: {}\t alive: {}\n",
+                                  i, e.index, e.target->index, e.face->index, e.next->index, e.prev->index,
+                                  e.twin != nullptr ? e.twin->index : -1, e.isActive);
             }
         }
 
         if (print_triangle)
         {
-            os << pm_format::format("Triangles:\tFace Size: {}\tFaceMap Size: {}\n", faces.size(), faceMap.size()) << std::endl;
+            os << fmt::format("Triangles:\tFace Size: {}\tFaceMap Size: {}\n", faces.size(), faceMap.size()) << std::endl;
             for (int i = 0; i < faces.size(); i++)
             {
                 auto &f = faces[i];
-                os << pm_format::format("{}:\t index: {}\t vertices: ({}, {}, {})\thalfedge: {}\t alive: {}\n", i, f.index, f.halfedge->target->index, f.halfedge->next->target->index, f.halfedge->prev->target->index, f.halfedge->index, f.isActive);
+                os << fmt::format("{}:\t index: {}\t vertices: ({}, {}, {})\thalfedge: {}\t alive: {}\n", i, f.index, f.halfedge->target->index, f.halfedge->next->target->index, f.halfedge->prev->target->index, f.halfedge->index, f.isActive);
             }
         }
         os << std::endl;
