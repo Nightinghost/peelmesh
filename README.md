@@ -30,12 +30,26 @@ peelmesh
 └── CMakeLists.txt        # CMake project
 ```
 
-## 🛠️ Build and Install Instructions (C++)
-
-### 🔧 Prerequisites
+## 🔧 Prerequisites
 - CMake $\ge$ 3.21
-- C++ compiler with C++20 support (e.g. MSVC 2022, Clang for MSVC 2022, GCC 13)
+- C++ compiler with C++20 support (e.g. MSVC 2022, Clang for MSVC 2022, GCC 11+)
 - Python 3.x (optional, for bindings)
+
+## 📦 Dependencies
+
+PeelMesh uses [CMake FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html) to automatically manage most dependencies. You don't need to install them manually.
+
+| Library          | Purpose                       | Managed By          | Optional?                                |
+| ---------------- | ----------------------------- | ------------------- | ---------------------------------------- |
+| fmt              | Safe & fast string formatting | FetchContent        | No                                       |
+| geometry-central | Fast geodesic computation     | FetchContent        | No                                       |
+| pybind11         | C++ to Python bindings        | FetchContent        | Yes (if PEELMESH_BUILD_PYTHON_MOUDLE=ON) |
+| googletest       | Unit testing framework        | FetchContent        | Yes (if PEELMESH_BUILD_UNIT_TESTS=ON)    |
+| Open3D           | 3D visualization and GUI demo | System/FetchContent | Yes (if PEELMESH_BUILD_EXAMPLES=ON)      |
+
+> **Note on Open3D:** Due to its size, we recommend having Open3D pre-installed on your system if you wish to build the interactive demo.
+
+## 🛠️ Build and Install Instructions (C++)
 
 ```bash
 # Clone repository
@@ -60,7 +74,8 @@ cd peelmesh
 pip install .
 ```
 
-To build the Python bindings, you need to have a working Python installation (conda, venv, etc.)
+### Option 2: Manual Build
+If you need to build the extension without installing:
 
 ```bash
 conda activate myenv  # activate your Python environment
