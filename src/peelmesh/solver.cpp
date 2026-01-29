@@ -1,5 +1,6 @@
 #include <peelmesh/solver.hpp>
-#include <format>
+// #include <format>
+#include <fmt/format.h>
 namespace peelmesh
 {
     Solver::Solver(const std::vector<Eigen::Vector3d> &verts, const std::vector<Eigen::Vector3i> &tris)
@@ -48,7 +49,7 @@ namespace peelmesh
     {
         if (start == end)
         {
-            std::cout << std::format("[PeelMesh]: Geodesic path start and end are the same. Returning empty path.") << std::endl;
+            std::cout << fmt::format("[PeelMesh]: Geodesic path start and end are the same. Returning empty path.") << std::endl;
             return {};
         }
         using namespace geometrycentral::surface;
@@ -73,7 +74,7 @@ namespace peelmesh
     {
         if (start == end)
         {
-            std::cout << std::format("[PeelMesh]: Geodesic path start and end are the same. Returning empty path.") << std::endl;
+            std::cout << fmt::format("[PeelMesh]: Geodesic path start and end are the same. Returning empty path.") << std::endl;
             return {};
         }
         using namespace geometrycentral::surface;

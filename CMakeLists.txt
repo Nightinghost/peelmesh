@@ -24,13 +24,17 @@ project(peelmesh LANGUAGES CXX VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(MSVC)
     add_compile_options(/utf-8 /wd4996 /wd4267 /wd4244)
-else()
-    add_compile_options(-fPIC)
 endif()
 
+# Check std::format availability
+include(CheckIncludeFileCXX)
+check_include_file_cxx("format" HAVE_STD_FORMAT)
+
+# set(FORMAT_DEP "" CACHE INTERNAL "fmt dependency")
 include(GNUInstallDirs)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
@@ -38,8 +42,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 option(PEELMESH_BUILD_UNIT_TESTS "Build unit tests" OFF)
 option(PEELMESH_BUILD_PYTHON_MODULE "Build Python module" OFF)
+option(PEELMESH_BUILD_EXAMPLES "Build examples" OFF)
 
 set(PEELMESH_EXT_GEOMETRY_CENTRAL_SRC "" CACHE PATH "downloaded geometry-central source directory")
+set(PEELMESH_EXT_FMT_SRC "" CACHE PATH "downloaded fmt source directory")
+set(PEELMESH_EXT_PYBIND11_SRC "" CACHE PATH "downloaded pybind11 source directory")
+set(PEELMESH_EXT_GOOGLETEST_SRC "" CACHE PATH "downloaded googletest source directory")
 
 if(SKBUILD)
     message(STATUS "Building via scikit-build-core, enabling Python module")
@@ -60,49 +68,53 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
-install(TARGETS peelmesh geometry-central nanort nanoflann happly eigen
-    EXPORT peelmeshTargets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install(TARGETS peelmesh geometry-central nanort nanoflann happly eigen fmt
+        EXPORT peelmeshTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(DIRECTORY ${geometry-central_SOURCE_DIR}/deps/nanoflann/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/nanoflann
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/nanoflann
 )
 install(DIRECTORY ${geometry-central_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/geometrycentral
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/geometrycentral
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/fmt
 )
 
 if(PEELMESH_BUILD_EXAMPLES)
     install(DIRECTORY ${Open3D_INCLUDE_DIR}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/Open3D)
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/Open3D)
 endif()
 
 install(EXPORT peelmeshTargets
-    FILE peelmeshTargets.cmake
-    NAMESPACE peelmesh::
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
+        FILE peelmeshTargets.cmake
+        NAMESPACE peelmesh::
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
 )
 
 configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/peelmeshConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
+        ${CMAKE_SOURCE_DIR}/cmake/peelmeshConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfig.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
 )
 
 write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion
+        ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfigVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
 )
 
 install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfigVersion.cmake
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
+        ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
 )

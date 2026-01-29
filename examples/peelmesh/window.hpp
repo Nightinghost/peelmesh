@@ -4,7 +4,6 @@
 #include <Open3D/Open3D.h>
 
 #include <peelmesh/pipeline.hpp>
-#include <format>
 #include <thread>
 #include <filesystem>
 

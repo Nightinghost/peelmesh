@@ -1,3 +1,5 @@
+add_subdirectory(fmt)
+
 add_subdirectory(geometry-central)
 
 if(PEELMESH_BUILD_PYTHON_MODULE)

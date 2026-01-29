@@ -44,7 +44,7 @@ void Draw(const peelmesh::TriangleMesh &mesh)
 int main()
 {
     auto mesh = CreateHexagonMeshWithBoundary();
-    // Draw(mesh);
+    Draw(mesh);
 
     const auto &[n1, n2] = mesh.GetOneRingNeighborIndicesStartFrom(4, 0);
 
