@@ -5,13 +5,14 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  workflow_call:
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   build:
     name: Build on ${{ matrix.os }} (${{ matrix.compiler }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -19,21 +20,21 @@ jobs:
             cc: cl
             cxx: cl
             badge: windows-msvc
-            exe: .exe
-
           - os: windows-latest
             compiler: clang
             cc: clang-cl
             cxx: clang-cl
             badge: windows-clang
-            exe: .exe
-
           - os: ubuntu-latest
-            compiler: gcc-13
-            cc: gcc-13
-            cxx: g++-13
+            compiler: gcc
+            cc: gcc
+            cxx: g++
             badge: ubuntu-gcc
-            exe: ""
+          - os: ubuntu-latest
+            compiler: python-pip
+            cc: gcc
+            cxx: g++
+            badge: python-pip
 
     env:
       CC: ${{ matrix.cc }}
@@ -42,97 +43,80 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: CMake Configure & Build
+        if: matrix.badge != 'python-pip'
         run: |
           cmake -S . -B build -DPEELMESH_BUILD_UNIT_TESTS=ON -DPEELMESH_BUILD_PYTHON_MODULE=ON
           cmake --build build --config Release
 
       - name: Run CTest
-        continue-on-error: true
+        if: matrix.badge != 'python-pip'
         run: |
           cd build
-          ctest --output-on-failure -C Release || echo "ctest failed"
+          ctest --output-on-failure -C Release
 
+      - name: Verify Pip Installation
+        if: matrix.badge == 'python-pip'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -v .
+          # 核心验证：确保 C++ 扩展能被成功 import
+          python -c "import peelmesh; print('Extension loaded successfully!')"
 
+      # --- 结果处理：为 Badge Job 保存状态 ---
       - name: Save build result
         shell: bash
-        if: success() && always()
+        if: always()
         run: |
-          if ctest --output-on-failure -C Release; then
+          if [ "${{ job.status }}" == "success" ]; then
             echo "success" > ${{ matrix.badge }}-result.txt
           else
             echo "failure" > ${{ matrix.badge }}-result.txt
           fi
 
-      # - name: Save build result
-      #   if: success() && always()
-      #   run: |
-      #       echo "success" > ${{ matrix.badge }}-result.txt
-        
-      # - name: Save failure result
-      #   if: failure() && always() && cancelled()
-      #   run: |
-      #       echo "failure" > ${{ matrix.badge }}-result.txt
-    
-      - name: Upload result
+      - name: Upload result artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.badge }}-result
           path: ${{ matrix.badge }}-result.txt
-    
-      - name: Debug Badge Result
-        run: cat ${{ matrix.badge }}-result.txt
-        
-    
+
   badge:
     name: Write Badge
     runs-on: ubuntu-latest
     needs: build
+    if: always()
     strategy:
-        matrix:
-          include:
-            - badge: windows-msvc
-            - badge: windows-clang
-            - badge: ubuntu-gcc
+      matrix:
+        include:
+          - badge: windows-msvc
+          - badge: windows-clang
+          - badge: ubuntu-gcc
+          - badge: python-pip
     steps:
-        - uses: actions/download-artifact@v4
-          if: always()
-          with:
-            name: ${{ matrix.badge }}-result
-            path: .
-        
-        - name: Debug badge result
-          if: always()
-          run: cat ${{ matrix.badge }}-result.txt
-          
+      - name: Download result artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.badge }}-result
+          path: .
 
-        - name: Read badge result
-          if: always()
-          id: read_result
-          run: |
-            result=$(<${{ matrix.badge }}-result.txt)
-            result=$(echo "$result" | tr -d '\r\n ')
-            echo "result=$result" >> $GITHUB_OUTPUT
-        
-        - name: Set Badge (Success)
-          if: steps.read_result.outputs.result == 'success' && always()
-          uses: RubbaBoy/BYOB@v1.3.0
-          with:
-              name: ${{ matrix.badge }}
-              label: ${{ matrix.badge }}
-              icon: github
-              status: success
-              color: green
-              github_token: ${{ secrets.GITHUB_TOKEN }}
-        
-        - name: Set Badge (Failure)
-          if: steps.read_result.outputs.result != 'success' && always()
-          uses: RubbaBoy/BYOB@v1.3.0
-          with:
-            name: ${{ matrix.badge }}
-            label: ${{ matrix.badge }}
-            icon: github
-            status: failure
-            color: red
-            github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Read badge result
+        id: read_result
+        shell: bash
+        run: |
+          result=$(cat ${{ matrix.badge }}-result.txt | tr -d '\r\n ')
+          echo "status=$result" >> $GITHUB_OUTPUT
+
+      - name: Set Badge Status
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          name: ${{ matrix.badge }}
+          label: ${{ matrix.badge }}
+          status: ${{ steps.read_result.outputs.status }}
+          color: ${{ steps.read_result.outputs.status == 'success' && 'green' || 'red' }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -4,6 +4,7 @@
 ![MSVC](https://byob.yarr.is/Nightinghost/peelmesh/windows-msvc)
 ![Clang](https://byob.yarr.is/Nightinghost/peelmesh/windows-clang)
 ![GCC](https://byob.yarr.is/Nightinghost/peelmesh/ubuntu-gcc)
+![Pip Install](https://byob.yarr.is/Nightinghost/peelmesh/python-pip)
 
 PeelMesh is a C++ library with optional Python bindings for flexible and interactive 3D mesh segmentation. It supports manually specified landmarks, dynamic geodesic path embedding, and mesh topology editing. This repository accompanies the [CGI 2025](https://www.cgsociety.org/) paper: "PeelMesh: Efficient Interactive Segmentation via Geodesic-Driven Dynamic Topological Updates"
 
@@ -50,6 +51,15 @@ cmake --build . --target install
 ```
 
 ## 🧪 Python Bindings
+
+### Option 1: Install via pip (Recommended)
+
+You can install PeelMesh directly into your Python environment:
+```bash
+cd peelmesh
+pip install .
+```
+
 To build the Python bindings, you need to have a working Python installation (conda, venv, etc.)
 
 ```bash
