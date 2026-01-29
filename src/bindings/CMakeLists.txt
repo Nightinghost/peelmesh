@@ -28,11 +28,14 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py
     COMPONENT python
 )
 
-add_custom_command(TARGET peelmesh_module POST_BUILD
-    WORKING_DIRECTORY $<TARGET_FILE_DIR:peelmesh_module>
-    COMMAND ${Python_EXECUTABLE} -m pybind11_stubgen peelmesh -o $<TARGET_FILE_DIR:peelmesh_module>/
-    COMMENT "Generating .pyi stub for peelmesh"
-)
+if(SKBUILD)
+    message(STATUS "Building via scikit-build-core, enabling Python module")
+    add_custom_command(TARGET peelmesh_module POST_BUILD
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:peelmesh_module>
+        COMMAND ${Python_EXECUTABLE} -m pybind11_stubgen peelmesh -o $<TARGET_FILE_DIR:peelmesh_module>/
+        COMMENT "Generating .pyi stub for peelmesh"
+    )
+endif()
 
 install(FILES $<TARGET_FILE_DIR:peelmesh_module>/peelmesh.pyi
     DESTINATION peelmesh

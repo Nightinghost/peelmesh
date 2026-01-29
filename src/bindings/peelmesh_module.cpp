@@ -122,6 +122,31 @@ public:
     std::vector<double> GetGeodesicDistances() const { return pipe->GetGeodesicDistances(); }
     double GetGeodesicDistanceBetween(int start, int end) const { return pipe->GetGeodesicDistanceBetween(start, end); }
 
+    std::vector<Eigen::Vector3d> GetGeodesicPath(int start, int end) const
+    {
+        return pipe->GetGeodesicPath(start, end);
+    }
+
+    std::vector<Eigen::Vector3d> GetShortestPath(int start, int end) const
+    {
+        return pipe->GetShortestPath(start, end);
+    }
+
+    std::vector<Eigen::Vector3d> GetAddedPath(int index) const
+    {
+        return pipe->GetPaths().at(index).GetVertexPositions();
+    }
+
+    std::vector<std::vector<Eigen::Vector3d>> GetAllAddedPaths() const
+    {
+        std::vector<std::vector<Eigen::Vector3d>> all_paths;
+        for (const auto &path : pipe->GetPaths())
+        {
+            all_paths.push_back(path.GetVertexPositions());
+        }
+        return all_paths;
+    }
+
 private:
     std::unique_ptr<PeelMeshPipeline> pipe;
 };
@@ -208,5 +233,16 @@ Typical usage involves loading a mesh, adding boundary paths, and performing pee
         .def("get_geodesic_distances", &PyPeelMeshPipeline::GetGeodesicDistances,
              "Compute geodesic distance field over the mesh.")
         .def("get_geodesic_distance_between", &PyPeelMeshPipeline::GetGeodesicDistanceBetween,
-             "Compute geodesic distance between two given vertices.");
+             "Compute geodesic distance between two given vertices.")
+        .def("get_geodesic_path", &PyPeelMeshPipeline::GetGeodesicPath,
+             py::arg("start"), py::arg("end"),
+             "Return the geodesic path between two vertices.")
+        .def("get_shortest_path", &PyPeelMeshPipeline::GetShortestPath,
+             py::arg("start"), py::arg("end"),
+             "Return the shortest path between two vertices.")
+        .def("get_added_path", &PyPeelMeshPipeline::GetAddedPath,
+             py::arg("index"),
+             "Return the added path at the specified index.")
+        .def("get_all_added_paths", &PyPeelMeshPipeline::GetAllAddedPaths,
+             "Return all added paths as a list of point sequences.");
 }

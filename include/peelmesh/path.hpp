@@ -23,10 +23,8 @@ namespace peelmesh
         void InsertVertexBetween(TriangleMesh::Vertex *v1, TriangleMesh::Vertex *v2, TriangleMesh::Vertex *v);
         bool Contains(TriangleMesh::Vertex *v);
 
-        std::vector<TriangleMesh::Vertex *> GetVertices() const
-        {
-            return vertices_;
-        }
+        std::vector<TriangleMesh::Vertex *> GetVertices() const { return vertices_; }
+        std::vector<Eigen::Vector3d> GetVertexPositions() const;
         std::array<TriangleMesh::Vertex *, 2> GetEndpoints() const { return {vertices_.front(), vertices_.back()}; }
 
         inline bool IsEmpty() const { return vertices_.empty(); }

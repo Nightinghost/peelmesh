@@ -44,8 +44,6 @@ set(PEELMESH_EXT_GEOMETRY_CENTRAL_SRC "" CACHE PATH "downloaded geometry-central
 if(SKBUILD)
     message(STATUS "Building via scikit-build-core, enabling Python module")
     set(PEELMESH_BUILD_PYTHON_MODULE ON CACHE BOOL "Build Python module" FORCE)
-else()
-    option(PEELMESH_BUILD_PYTHON_MODULE "Build Python module" OFF)
 endif()
 
 add_subdirectory(external)

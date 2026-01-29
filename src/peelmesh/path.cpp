@@ -115,4 +115,15 @@ namespace peelmesh
         }
         return length;
     }
+
+    std::vector<Eigen::Vector3d> Path::GetVertexPositions() const
+    {
+        std::vector<Eigen::Vector3d> positions;
+        positions.reserve(vertices_.size());
+        for (const auto &v : vertices_)
+        {
+            positions.push_back(v->position);
+        }
+        return positions;
+    }
 } // namespace peelmesh

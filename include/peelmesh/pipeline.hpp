@@ -43,6 +43,12 @@ namespace peelmesh
 
         void AddPath(const std::vector<Eigen::Vector3d> &points);
 
+        // Return the geodesic path between two vertices.
+        std::vector<Eigen::Vector3d> GetGeodesicPath(int start, int end) const;
+
+        // Return the shortest path between two vertices.
+        std::vector<Eigen::Vector3d> GetShortestPath(int start, int end) const;
+
         // Compute the geodesic between <start> and <end> and add the path to the mesh.
         void AddGeodesicPath(int start, int end);
 

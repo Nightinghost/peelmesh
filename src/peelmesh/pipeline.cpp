@@ -171,6 +171,16 @@ namespace peelmesh
         paths_.push_back(path);
     }
 
+    std::vector<Eigen::Vector3d> PeelMeshPipeline::GetGeodesicPath(int start, int end) const
+    {
+        return solver_->GetGeodesicPath(start, end);
+    }
+
+    std::vector<Eigen::Vector3d> PeelMeshPipeline::GetShortestPath(int start, int end) const
+    {
+        return solver_->GetShortestPath(start, end);
+    }
+
     void PeelMeshPipeline::AddGeodesicPath(int start, int end)
     {
         auto geodesic = solver_->GetGeodesicPath(start, end);
