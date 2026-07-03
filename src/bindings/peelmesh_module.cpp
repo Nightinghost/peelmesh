@@ -122,6 +122,8 @@ public:
     std::vector<double> GetGeodesicDistances() const { return pipe->GetGeodesicDistances(); }
     double GetGeodesicDistanceBetween(int start, int end) const { return pipe->GetGeodesicDistanceBetween(start, end); }
 
+    void Reset() { pipe->Reset(); }
+
 private:
     std::unique_ptr<PeelMeshPipeline> pipe;
 };
@@ -208,5 +210,7 @@ Typical usage involves loading a mesh, adding boundary paths, and performing pee
         .def("get_geodesic_distances", &PyPeelMeshPipeline::GetGeodesicDistances,
              "Compute geodesic distance field over the mesh.")
         .def("get_geodesic_distance_between", &PyPeelMeshPipeline::GetGeodesicDistanceBetween,
-             "Compute geodesic distance between two given vertices.");
+             "Compute geodesic distance between two given vertices.")
+        .def("reset", &PyPeelMeshPipeline::Reset,
+             "Reset the pipeline to its initial state, discarding all paths and restoring the original mesh.");
 }

@@ -1,2 +1,12 @@
 .vscode/*
 build/*
+_deps/*
+CMakeFiles/*
+
+**/CMakeFiles/
+
+# Pre-downloaded external dependencies (optional)
+external/fmt-src/
+external/geometry-central-src/
+external/pybind11-src/
+external/eigen-src/

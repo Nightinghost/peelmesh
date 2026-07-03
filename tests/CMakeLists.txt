@@ -14,3 +14,8 @@ add_executable(kdtree_test kdtree.cpp)
 target_link_libraries(kdtree_test PRIVATE peelmesh gtest_main geometry-central)
 
 gtest_discover_tests(kdtree_test)
+
+add_executable(pipeline_test Pipeline.cpp)
+target_link_libraries(pipeline_test PRIVATE peelmesh gtest_main geometry-central)
+
+gtest_discover_tests(pipeline_test)

@@ -35,6 +35,10 @@ namespace peelmesh
 
         bool paths_crossing_ = false;
 
+        // Backup of initial mesh data for Reset()
+        std::vector<Eigen::Vector3d> initialVerts_;
+        std::vector<Eigen::Vector3i> initialTris_;
+
     public:
         explicit PeelMeshPipeline(const std::vector<Eigen::Vector3d> &verts, const std::vector<Eigen::Vector3i> &tris);
         explicit PeelMeshPipeline(std::shared_ptr<TriangleMesh> mesh);
@@ -83,6 +87,10 @@ namespace peelmesh
         // @return The geodesic distance between two vertices.
         double GetGeodesicDistanceBetween(int start, int end) const;
 
+        // Reset the pipeline to its initial state, discarding all paths and
+        // restoring the original input mesh.
+        void Reset();
+
     private:
         std::tuple<std::vector<int>, std::vector<double>> GetKNearestNeighbors(const Eigen::Vector3d &pos, int knn = 1) const;
         std::unordered_set<Face *> GetAdjacentTriangles(std::vector<Vertex *> verts) const;
@@ -108,7 +116,7 @@ namespace peelmesh
         std::tuple<PositionType, PositionTypeResult> GetRelationshipWSTTriangle(const Eigen::Vector3d &p, Face *t) const;
 
         // Given a line segment [start, end] which crossing edges, and does not appeared in the topology of the mesh, compute the intersection points.
-        std::vector<Vertex *> ProcessMultiCrossEdge(const Vertex *start, const Vertex *end, int max_iteration = 50);
+        std::vector<Vertex *> ProcessMultiCrossEdge(const Vertex *start, const Vertex *end, int max_iteration = 200);
 
         Eigen::Vector3d GetIntersection(const Vertex *v1, const Vertex *v2, const Vertex *p1, const Vertex *p2) const;
     };

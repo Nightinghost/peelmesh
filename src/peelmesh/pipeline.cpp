@@ -14,7 +14,9 @@ namespace peelmesh
 
     PeelMeshPipeline::PeelMeshPipeline(const std::vector<Eigen::Vector3d> &verts, const std::vector<Eigen::Vector3i> &tris)
         : mesh_(std::make_shared<TriangleMesh>(verts, tris)),
-          solver_(std::make_unique<GeodesicSolver>(verts, tris))
+          solver_(std::make_unique<GeodesicSolver>(verts, tris)),
+          initialVerts_(verts),
+          initialTris_(tris)
     {
     }
 
@@ -23,6 +25,16 @@ namespace peelmesh
     {
         const auto &[verts, tris] = mesh->getMeshData();
         solver_ = std::make_unique<GeodesicSolver>(verts, tris);
+        initialVerts_ = verts;
+        initialTris_ = tris;
+    }
+
+    void PeelMeshPipeline::Reset()
+    {
+        mesh_ = std::make_shared<TriangleMesh>(initialVerts_, initialTris_);
+        solver_ = std::make_unique<GeodesicSolver>(initialVerts_, initialTris_);
+        paths_.clear();
+        paths_crossing_ = false;
     }
 
     void PeelMeshPipeline::AddPath(const std::vector<Eigen::Vector3d> &points)
@@ -354,8 +366,16 @@ namespace peelmesh
     {
         std::vector<Vertex *> inner_verts;
         int iter = 0;
+        // Track visited vertices to detect cycles (e.g. when Phase 2
+        // direction-based walking oscillates between two vertices).
+        std::unordered_set<int> visited = {start->index};
         while (mesh_->findEdge(start->index, end->index) == nullptr)
         {
+            if (iter++ >= max_iteration)
+            {
+                throw std::logic_error("PeelMeshPipeline::ProcessMultiCrossEdge() reach max iteration!");
+            }
+
             std::unordered_set<Eigen::Vector2i> unique_edges;
 
             auto tris = mesh_->GetAdjacentTriangles(start);
@@ -373,6 +393,7 @@ namespace peelmesh
                 } while (he != tri->halfedge);
             }
 
+            bool found_intersection = false;
             for (auto &edge : unique_edges)
             {
                 auto he = mesh_->findEdge(edge[0], edge[1]);
@@ -386,10 +407,16 @@ namespace peelmesh
                     auto v = mesh_->InsertVertexAtEdge(intersection, he);
                     inner_verts.push_back(v);
 
-                    auto new_he = mesh_->findHalfEdge(start->index, v->index);
-                    new_he->path_id = paths_.size();
-                    if (new_he->twin != nullptr)
-                        new_he->twin->path_id = paths_.size();
+                    // Set path_id on the newly created edge from start to v.
+                    // Prefer findEdge (undirected) over findHalfEdge so that
+                    // boundary edges are handled correctly.
+                    auto new_edge = mesh_->findEdge(start->index, v->index);
+                    if (new_edge != nullptr)
+                    {
+                        new_edge->path_id = paths_.size();
+                        if (new_edge->twin != nullptr)
+                            new_edge->twin->path_id = paths_.size();
+                    }
                     start = v;
 
                     // may cross other path edges, need insert new vertex between them
@@ -411,15 +438,134 @@ namespace peelmesh
                             v1_v_he->twin->path_id = path_id;
                     }
 
+                    found_intersection = true;
                     break;
                 }
             }
 
-            if (iter++ > max_iteration)
+            if (!found_intersection)
             {
-                throw std::logic_error("PeelMeshPipeline::ProcessMultiCrossEdge() reach max iteration!");
+                // The segment (start, end) did not cross any edge interior in the
+                // one-ring. On a coplanar triangulation this means the segment exits
+                // the one-ring through a vertex (not an edge interior).
+                //
+                // GetIntersection() returns Zero in this case because when the
+                // segment passes through vertex v, (v-start) is collinear with
+                // (end-start), making the cross product zero and failing the
+                // strict < 0 crossing-side check.
+                //
+                // Strategy: first try to find a one-ring vertex that lies on the
+                // segment (collinearity test). If found, walk to it via the
+                // existing edge. Otherwise, fall back to direction-based stepping.
+
+                const Eigen::Vector3d seg_dir = end->position - start->position;
+                const double seg_len_sq = seg_dir.squaredNorm();
+
+                Vertex *step_vertex = nullptr;
+
+                // Phase 1: check if any neighbor vertex is collinear with the
+                // segment and lies between start and end.
+                for (auto &uv_edge : unique_edges)
+                {
+                    auto he = mesh_->findEdge(uv_edge[0], uv_edge[1]);
+                    for (Vertex *candidate : {he->target, he->prev->target})
+                    {
+                        if (candidate->index == start->index)
+                            continue;
+
+                        const Eigen::Vector3d to_candidate = candidate->position - start->position;
+                        // Cross product ≈ 0  →  collinear
+                        if (to_candidate.cross(seg_dir).squaredNorm() < DEGENERATE_THRESHOLD * seg_len_sq)
+                        {
+                            const double proj = to_candidate.dot(seg_dir);
+                            // Between start and end (not behind, not beyond)
+                            if (proj > 0 && proj < seg_len_sq)
+                            {
+                                step_vertex = candidate;
+                                break;
+                            }
+                        }
+                    }
+                    if (step_vertex != nullptr)
+                        break;
+                }
+
+                // Phase 2: if no collinear vertex found, use direction-based
+                // fallback — walk to the neighbor whose direction best aligns
+                // with the direction toward end.
+                if (step_vertex == nullptr)
+                {
+                    const Eigen::Vector3d dir_to_end = seg_dir.normalized();
+                    double best_dot = -1.0;
+
+                    for (auto &uv_edge : unique_edges)
+                    {
+                        auto he = mesh_->findEdge(uv_edge[0], uv_edge[1]);
+                        for (Vertex *candidate : {he->target, he->prev->target})
+                        {
+                            if (candidate->index == start->index)
+                                continue;
+                            const double dot = (candidate->position - start->position).normalized().dot(dir_to_end);
+                            if (dot > best_dot)
+                            {
+                                best_dot = dot;
+                                step_vertex = candidate;
+                            }
+                        }
+                    }
+                }
+
+                if (step_vertex != nullptr && step_vertex->index != start->index
+                    && visited.find(step_vertex->index) == visited.end())
+                {
+                    // Walk along the existing mesh edge to the chosen neighbor.
+                    // Use findEdge (undirected) rather than findHalfEdge so that
+                    // boundary edges are handled correctly: on a boundary edge,
+                    // the stored halfedge may point opposite to the walking
+                    // direction and its twin is null, causing findHalfEdge to
+                    // return nullptr even though the undirected edge exists.
+                    auto edge = mesh_->findEdge(start->index, step_vertex->index);
+                    if (edge != nullptr)
+                    {
+                        if (edge->path_id == -1)
+                            edge->path_id = paths_.size();
+                        else if (edge->path_id != paths_.size())
+                            paths_crossing_ = true;
+
+                        if (edge->twin != nullptr)
+                        {
+                            if (edge->twin->path_id == -1)
+                                edge->twin->path_id = paths_.size();
+                            else if (edge->twin->path_id != paths_.size())
+                                paths_crossing_ = true;
+                        }
+                    }
+                    // Include the existing vertex in the result so that the
+                    // caller (AddPath) can insert it into the path and
+                    // continue processing from it.
+                    inner_verts.push_back(step_vertex);
+                    visited.insert(step_vertex->index);
+                    start = step_vertex;
+                }
+                else if (step_vertex != nullptr && visited.find(step_vertex->index) != visited.end())
+                {
+                    // Cycle detected: the algorithm is revisiting a vertex,
+                    // which means the direction-based heuristic is oscillating.
+                    // Throw instead of breaking so that AddPath's catch handler
+                    // stops retrying with the same unresolved segment.
+                    throw std::logic_error(
+                        fmt::format("[PeelMeshPipeline] ProcessMultiCrossEdge: cycle detected at vertex {} (from {} to {})",
+                                    step_vertex->index, start->index, end->index));
+                }
+                else
+                {
+                    // Truly stuck — should not happen on a well-formed connected
+                    // coplanar triangulation.
+                    throw std::logic_error(
+                        fmt::format("[PeelMeshPipeline] ProcessMultiCrossEdge: stuck at vertex {}, cannot reach vertex {}",
+                                    start->index, end->index));
+                }
             }
-            iter++;
         }
 
         return inner_verts;

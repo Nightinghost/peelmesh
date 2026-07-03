@@ -1,5 +1,10 @@
 include(FetchContent)
 
+# Auto-detect pre-downloaded source
+if(NOT PEELMESH_EXT_FMT_SRC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../fmt-src/CMakeLists.txt")
+    set(PEELMESH_EXT_FMT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../fmt-src")
+endif()
+
 if(PEELMESH_EXT_FMT_SRC AND EXISTS ${PEELMESH_EXT_FMT_SRC}/CMakeLists.txt)
     message(STATUS "Using external fmt source dir: ${PEELMESH_EXT_FMT_SRC}")
 
