@@ -88,8 +88,11 @@ install(DIRECTORY ${geometry-central_SOURCE_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/geometrycentral
 )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/deps/fmt
+install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps/geometry-central-build/deps/eigen-src/Eigen/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Eigen
+)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps/geometry-central-build/deps/eigen-src/unsupported/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/unsupported
 )
 
 if(PEELMESH_BUILD_EXAMPLES)
@@ -100,13 +103,13 @@ endif()
 install(EXPORT peelmeshTargets
         FILE peelmeshTargets.cmake
         NAMESPACE peelmesh::
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/peelmesh/
 )
 
 configure_package_config_file(
         ${CMAKE_SOURCE_DIR}/cmake/peelmeshConfig.cmake.in
         ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfig.cmake
-        INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/peelmesh/
 )
 
 write_basic_package_version_file(
@@ -118,5 +121,5 @@ write_basic_package_version_file(
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/peelmeshConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/CMake/
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/peelmesh/
 )

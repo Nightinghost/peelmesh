@@ -25,7 +25,7 @@ target_include_directories(peelmesh
         $<INSTALL_INTERFACE:include>
         $<INSTALL_INTERFACE:include/deps/nanoflann>
         $<INSTALL_INTERFACE:include/deps/geometrycentral>
-        $<INSTALL_INTERFACE:include/deps/fmt>
+
 )
 
 target_link_libraries(peelmesh PUBLIC eigen
