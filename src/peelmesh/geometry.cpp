@@ -959,16 +959,6 @@ namespace peelmesh
             clockwise_vec.push_back(idx);
             curr_he = curr_he->next->twin;
         }
-        // clockwise_vec.push_back(he->target->index);
-        // curr_he = he->twin;
-        // while (curr_he != nullptr)
-        // {
-        //     int idx = curr_he->next->target->index;
-        //     if (idx == he->target->index)
-        //         break;
-        //     clockwise_vec.push_back(idx);
-        //     curr_he = curr_he->next->twin;
-        // }
 
         return {counterclockwise_vec, clockwise_vec};
     }
@@ -978,5 +968,37 @@ namespace peelmesh
         auto he = vertices[center_idx].halfedge;
 
         return GetOneRingNeighborIndicesStartFrom(center_idx, he->target->index);
+    }
+
+    std::vector<std::vector<int>> TriangleMesh::GetBoundaryVertices() const
+    {
+        std::vector<const HalfEdge *> boundary_halfedges;
+        for (auto he : halfEdges)
+        {
+            if (he.isActive && he.twin == nullptr)
+            {
+                boundary_halfedges.push_back(&he);
+            }
+        }
+
+        std::vector<std::vector<int>> boundary_loops;
+        std::unordered_set<int> visited;
+        for (auto &he : boundary_halfedges)
+        {
+            if (visited.count(he->index))
+                continue;
+
+            std::vector<int> loop;
+            auto current_he = he;
+            do
+            {
+                loop.push_back(current_he->target->index);
+                visited.insert(current_he->index);
+                current_he = current_he->next;
+            } while (current_he != nullptr && current_he->twin == nullptr && current_he->index != he->index);
+
+            boundary_loops.push_back(loop);
+        }
+        return boundary_loops;
     }
 } // namespace peelmesh

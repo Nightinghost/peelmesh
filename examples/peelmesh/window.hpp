@@ -1,19 +1,26 @@
-#ifndef PEELMESH_WINDOW_H
-#define PEELMESH_WINDOW_H
+#ifndef GALAXY_PEELMESH_WINDOW_H
+#define GALAXY_PEELMESH_WINDOW_H
 
 #include <Open3D/Open3D.h>
 
 #include <peelmesh/pipeline.hpp>
 #include <thread>
 #include <filesystem>
+#include <functional>
+#include <algorithm>
+#include <cctype>
+#include <fstream>
 
 #include "portable-file-dialogs.h"
+#include "utility.hpp"
 
 namespace rendering = open3d::visualization::rendering;
 namespace gui = open3d::visualization::gui;
 
 const int OPEN_FILE = 1;
 const int EXPORT_SEGMENTS = 2;
+const int EXPORT_ALL_SEGMENTS = 3;
+const int OPEN_DIRECTORY = 4;
 
 namespace peelmesh
 {
@@ -31,6 +38,9 @@ namespace peelmesh
         std::vector<std::string> segment_names;
 
         std::vector<std::vector<int>> boundaries;
+
+        std::function<void(int)> on_navigate_file_;
+        std::function<void()> on_export_all_segments_;
 
         gui::Widget::EventResult Mouse(const gui::MouseEvent &e) override
         {
@@ -132,7 +142,8 @@ namespace peelmesh
             }
             else if (e.type == gui::MouseEvent::BUTTON_DOWN && e.button.button == gui::MouseButton::RIGHT)
             {
-                boundaries.push_back(landmarks);
+                if (!landmarks.empty())
+                    boundaries.push_back(landmarks);
                 landmarks.clear();
                 this->GetScene()->RemoveGeometry("geodesic_tmp");
             }
@@ -149,29 +160,60 @@ namespace peelmesh
             }
             else if (e.key == gui::KeyName::KEY_ENTER && e.type == gui::KeyEvent::DOWN)
             {
+                std::cout << "[ENTER] Processing " << boundaries.size() << " boundaries, "
+                          << "existing paths: " << pipe_->GetPaths().size() << std::endl;
+
                 std::vector<std::shared_ptr<TriangleMesh>> segments;
                 if (!boundaries.empty())
                 {
-                    for (auto &boundary : boundaries)
+                    for (int bi = 0; bi < boundaries.size(); bi++)
                     {
+                        auto &boundary = boundaries[bi];
+                        std::cout << "[ENTER] Boundary #" << bi << ": " << boundary.size() << " landmarks: ";
+                        for (int v : boundary)
+                            std::cout << v << " ";
+                        std::cout << std::endl;
+
                         if (boundary.size() < 3)
-                            break;
+                        {
+                            std::cout << "[ENTER] Boundary #" << bi << " skipped (< 3 vertices)" << std::endl;
+                            continue;
+                        }
 
                         if (boundary.front() != boundary.back())
                             boundary.push_back(boundary.front());
 
                         for (int i = 0; i < boundary.size() - 1; i++)
                         {
+                            std::cout << "[ENTER]   AddGeodesicPath(" << boundary[i] << ", " << boundary[i + 1] << ")" << std::endl;
                             pipe_->AddGeodesicPath(boundary[i], boundary[i + 1]);
                         }
+                        std::cout << "[ENTER]   paths after adds: " << pipe_->GetPaths().size() << std::endl;
 
-                        segments.push_back(pipe_->PeelOffMesh(boundary));
+                        auto segment = pipe_->PeelOffMesh(boundary);
+                        const auto &[verts, tris] = segment->getMeshData();
+                        if (verts.empty())
+                        {
+                            std::cout << "[ENTER]   PeelOffMesh FAILED (empty result)" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "[ENTER]   PeelOffMesh OK: " << verts.size() << " verts, " << tris.size() << " tris" << std::endl;
+                        }
+                        segments.push_back(segment);
                     }
+                }
+                else
+                {
+                    std::cout << "[ENTER] No boundaries to process" << std::endl;
                 }
 
                 for (auto &segment : segments)
                 {
                     const auto &[verts, tris] = segment->getMeshData();
+                    if (verts.empty())
+                        continue;
+
                     auto mesh = std::make_shared<open3d::geometry::TriangleMesh>(verts, tris);
 
                     mesh->PaintUniformColor({rand() % 255 / 255.0, rand() % 255 / 255.0, rand() % 255 / 255.0});
@@ -188,6 +230,7 @@ namespace peelmesh
                     mat.shader = "defaultLit";
                     this->GetScene()->AddGeometry(segment_names.back(), mesh.get(), mat);
                 }
+                std::cout << "[ENTER] Rendered " << segments_.size() << " segments total" << std::endl;
             }
             else if (e.key == gui::KeyName::KEY_A && e.type == gui::KeyEvent::DOWN)
             {
@@ -229,6 +272,28 @@ namespace peelmesh
                     mat.shader = "defaultLit";
                     this->GetScene()->AddGeometry(segment_names.back(), mesh.get(), mat);
                 }
+            }
+            else if (e.key == gui::KeyName::KEY_LEFT && e.type == gui::KeyEvent::DOWN)
+            {
+                if (on_navigate_file_)
+                    on_navigate_file_(-1);
+                auto aabb = this->GetScene()->GetBoundingBox();
+                this->SetupCamera(60.0, aabb, aabb.GetCenter().cast<float>());
+                return gui::Widget::EventResult::CONSUMED;
+            }
+            else if (e.key == gui::KeyName::KEY_RIGHT && e.type == gui::KeyEvent::DOWN)
+            {
+                if (on_navigate_file_)
+                    on_navigate_file_(1);
+                auto aabb = this->GetScene()->GetBoundingBox();
+                this->SetupCamera(60.0, aabb, aabb.GetCenter().cast<float>());
+                return gui::Widget::EventResult::CONSUMED;
+            }
+            else if (e.key == gui::KeyName::KEY_E && e.type == gui::KeyEvent::DOWN)
+            {
+                if (on_export_all_segments_)
+                    on_export_all_segments_();
+                return gui::Widget::EventResult::CONSUMED;
             }
             return gui::SceneWidget::Key(e);
         }
@@ -276,6 +341,12 @@ namespace peelmesh
 
         rendering::MaterialRecord wire_mat;
 
+        std::string file_path = "";
+
+        std::vector<std::string> dir_files_;
+        int current_file_index_ = -1;
+        std::shared_ptr<gui::Label> file_label_;
+
         std::chrono::steady_clock::time_point last_time = std::chrono::high_resolution_clock::now();
         unsigned int frame_count_ = 0;
 
@@ -287,6 +358,19 @@ namespace peelmesh
 
             this->AddChild(main_scene_);
 
+            file_label_ = std::make_shared<gui::Label>("No file loaded");
+            this->AddChild(file_label_);
+
+            main_scene_->on_navigate_file_ = [this](int direction)
+            {
+                NavigateFile(direction);
+            };
+
+            main_scene_->on_export_all_segments_ = [this]()
+            {
+                ExportAllSegments();
+            };
+
             DrawPipeline();
         }
         virtual ~Window() {}
@@ -294,8 +378,12 @@ namespace peelmesh
         void Layout(const gui::LayoutContext &context) override
         {
             auto window_rect = this->GetContentRect();
-            main_scene_->SetFrame(window_rect);
+            const int label_height = 24;
+            main_scene_->SetFrame(gui::Rect(window_rect.x, window_rect.y,
+                                            window_rect.width, window_rect.height - label_height));
             main_scene_->Layout(context);
+            file_label_->SetFrame(gui::Rect(window_rect.x, window_rect.y + window_rect.height - label_height,
+                                            window_rect.width, label_height));
         }
 
         void DrawPipeline()
@@ -330,13 +418,175 @@ namespace peelmesh
             main_scene_->SetupCamera(60.0, aabb, aabb.GetCenter().cast<float>());
         }
 
+        void LoadMeshFile(const std::string &path)
+        {
+            this->file_path = path;
+
+            auto mesh = open3d::io::CreateMeshFromFile(path);
+            mesh->RemoveDuplicatedTriangles();
+            mesh->RemoveDuplicatedVertices();
+
+            auto max_extent = mesh->GetAxisAlignedBoundingBox().GetMaxExtent();
+            scale_factor = 50.0f / max_extent;
+            rotation_center = mesh->GetCenter();
+
+            mesh->Scale(scale_factor, rotation_center);
+
+            pipe_ = std::make_shared<peelmesh::PeelMeshPipeline>(mesh->vertices_, mesh->triangles_);
+            main_scene_->pipe_ = pipe_;
+
+            gui::Application::GetInstance().PostToMainThread(this, [this, path]()
+                                                             {
+                main_scene_->ResetToDefault();
+                DrawPipeline();
+
+                auto filename = std::filesystem::path(path).filename().string();
+                file_label_->SetText(filename.c_str());
+                SaveSession(); });
+        }
+
+        void NavigateFile(int direction)
+        {
+            if (dir_files_.empty())
+                return;
+
+            int n = static_cast<int>(dir_files_.size());
+            current_file_index_ = (current_file_index_ + direction + n) % n;
+
+            LoadMeshFile(dir_files_[current_file_index_]);
+        }
+
+        void SaveSession()
+        {
+            auto cache_path = GetProgramDirPath() / "peelmesh_session.txt";
+            std::ofstream out(cache_path);
+            if (!dir_files_.empty() && current_file_index_ >= 0)
+            {
+                auto dir_path = std::filesystem::path(dir_files_[0]).parent_path().generic_string();
+                out << "dir=" << dir_path << "\n";
+                out << "index=" << current_file_index_ << "\n";
+            }
+            else if (!file_path.empty())
+            {
+                out << "file=" << file_path << "\n";
+            }
+        }
+
+        void TryRestoreSession()
+        {
+            auto cache_path = GetProgramDirPath() / "peelmesh_session.txt";
+            std::ifstream in(cache_path);
+            if (!in.is_open())
+                return;
+
+            std::string line, dir_path, file_path_only;
+            int index = -1;
+            while (std::getline(in, line))
+            {
+                if (line.starts_with("dir="))
+                    dir_path = line.substr(4);
+                else if (line.starts_with("index="))
+                    index = std::stoi(line.substr(6));
+                else if (line.starts_with("file="))
+                    file_path_only = line.substr(5);
+            }
+
+            if (!dir_path.empty() && index >= 0)
+            {
+                dir_files_.clear();
+                for (const auto &entry : std::filesystem::directory_iterator(dir_path))
+                {
+                    if (!entry.is_regular_file())
+                        continue;
+                    auto ext = entry.path().extension().string();
+                    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                    if (ext == ".obj" || ext == ".stl" || ext == ".ply" || ext == ".off")
+                        dir_files_.push_back(entry.path().generic_string());
+                }
+                std::sort(dir_files_.begin(), dir_files_.end(),
+                          [](const std::string &a, const std::string &b)
+                          {
+                              auto stem_a = std::filesystem::path(a).stem().string();
+                              auto stem_b = std::filesystem::path(b).stem().string();
+                              try
+                              {
+                                  int na = std::stoi(stem_a);
+                                  int nb = std::stoi(stem_b);
+                                  return na < nb;
+                              }
+                              catch (...)
+                              {
+                                  return stem_a < stem_b;
+                              }
+                          });
+                if (!dir_files_.empty())
+                {
+                    current_file_index_ = std::min(index, static_cast<int>(dir_files_.size()) - 1);
+                    LoadMeshFile(dir_files_[current_file_index_]);
+                }
+            }
+            else if (!file_path_only.empty())
+            {
+                LoadMeshFile(file_path_only);
+            }
+        }
+
+        void ExportAllSegments()
+        {
+            auto func = [this]()
+            {
+                auto export_dir = pfd::select_folder::select_folder("Choose Directory to Export Segments", pfd::path::home(), pfd::opt::none);
+
+                if (export_dir.result().empty())
+                {
+                    std::cout << "Cancel export!" << std::endl;
+                    return;
+                }
+
+                auto dir_str = export_dir.result();
+                gui::Application::GetInstance().PostToMainThread(this, [this, dir_str]()
+                                                                 {
+                    auto dir_path = std::filesystem::path(dir_str);
+
+                    auto file_name = std::filesystem::path(file_path).filename().replace_extension("");
+                    auto export_path = dir_path / file_name;
+
+                    if (!std::filesystem::exists(export_path))
+                    {
+                        std::filesystem::create_directory(export_path);
+                    }
+
+                    auto all_segments = pipe_->AutoSegmentation();
+
+                    for (int i = 0; i < all_segments.size(); i++)
+                    {
+                        const auto &[verts, tris] = all_segments[i]->getMeshData();
+                        auto mesh = std::make_shared<open3d::geometry::TriangleMesh>(verts, tris);
+                        mesh->Scale(1.0 / scale_factor, rotation_center);
+                        auto filename = export_path / ("seg_" + std::to_string(i) + ".obj");
+                        bool flag = open3d::io::WriteTriangleMesh(filename.generic_string(), *mesh);
+                        if (!flag)
+                        {
+                            std::cout << "Export " << filename.generic_string() << " failed!" << std::endl;
+                        }
+                    }
+
+                    std::cout << "Exported to " << export_path.generic_string() << std::endl;
+
+                    pfd::message("PeelMesh Export Segments", "Export Segments Done!", pfd::choice::ok, pfd::icon::info); });
+            };
+
+            std::thread export_t(func);
+            export_t.detach();
+        }
+
         virtual void OnMenuItemSelected(gui::Menu::ItemId item_id) override
         {
             switch (item_id)
             {
             case OPEN_FILE:
             {
-                auto func = [&, this]()
+                auto func = [this]()
                 {
                     auto f = pfd::open_file("Open File", ".", {"Mesh Files", "*.obj *.stl *.ply *.off"}, pfd::opt::none);
 
@@ -346,34 +596,83 @@ namespace peelmesh
                         return;
                     }
 
-                    auto mesh = open3d::io::CreateMeshFromFile(f.result()[0]);
-                    mesh->RemoveDuplicatedTriangles();
-                    mesh->RemoveDuplicatedVertices();
-
-                    auto max_extent = mesh->GetAxisAlignedBoundingBox().GetMaxExtent();
-                    scale_factor = 50.0f / max_extent;
-                    rotation_center = mesh->GetCenter();
-
-                    mesh->Scale(scale_factor, rotation_center);
-
-                    pipe_ = std::make_shared<peelmesh::PeelMeshPipeline>(mesh->vertices_, mesh->triangles_);
-
-                    main_scene_->pipe_ = pipe_;
-
-                    gui::Application::GetInstance().PostToMainThread(this, [this]()
-                                                                     {
-                                                                        main_scene_->ResetToDefault();
-                    DrawPipeline(); });
+                    auto path = f.result()[0];
+                    gui::Application::GetInstance().PostToMainThread(this, [this, path]()
+                                                                     { LoadMeshFile(path); });
                 };
 
                 std::thread open_mesh_t(func);
-                open_mesh_t.join();
+                open_mesh_t.detach();
+
+                break;
+            };
+            case OPEN_DIRECTORY:
+            {
+                auto func = [this]()
+                {
+                    auto dir = pfd::select_folder("Choose Directory with Mesh Files", pfd::path::home(), pfd::opt::none);
+
+                    if (dir.result().empty())
+                    {
+                        std::cout << "No directory is choosen!" << std::endl;
+                        return;
+                    }
+
+                    auto dir_str = dir.result();
+                    gui::Application::GetInstance().PostToMainThread(this, [this, dir_str]()
+                                                                     {
+                        dir_files_.clear();
+                        current_file_index_ = -1;
+
+                        std::filesystem::path dir_path(dir_str);
+                        for (const auto &entry : std::filesystem::directory_iterator(dir_path))
+                        {
+                            if (!entry.is_regular_file())
+                                continue;
+
+                            auto ext = entry.path().extension().string();
+                            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                            if (ext == ".obj" || ext == ".stl" || ext == ".ply" || ext == ".off")
+                            {
+                                dir_files_.push_back(entry.path().generic_string());
+                            }
+                        }
+
+                        std::sort(dir_files_.begin(), dir_files_.end(),
+                                  [](const std::string &a, const std::string &b)
+                                  {
+                                      auto stem_a = std::filesystem::path(a).stem().string();
+                                      auto stem_b = std::filesystem::path(b).stem().string();
+                                      try
+                                      {
+                                          int na = std::stoi(stem_a);
+                                          int nb = std::stoi(stem_b);
+                                          return na < nb;
+                                      }
+                                      catch (...)
+                                      {
+                                          return stem_a < stem_b;
+                                      }
+                                  });
+
+                        if (dir_files_.empty())
+                        {
+                            std::cout << "No mesh files found in directory!" << std::endl;
+                            return;
+                        }
+
+                        current_file_index_ = 0;
+                        LoadMeshFile(dir_files_[0]); });
+                };
+
+                std::thread open_dir_t(func);
+                open_dir_t.detach();
 
                 break;
             };
             case EXPORT_SEGMENTS:
             {
-                auto func = [&, this]()
+                auto func = [this]()
                 {
                     auto export_dir = pfd::select_folder::select_folder("Choose Directory to Export Segments", pfd::path::home(), pfd::opt::none);
 
@@ -383,31 +682,39 @@ namespace peelmesh
                         return;
                     }
 
-                    auto dir_path = std::filesystem::path(export_dir.result());
-                    if (!std::filesystem::exists(dir_path / "segments"))
-                    {
-                        std::filesystem::create_directory(dir_path / "segments");
-                    }
-
-                    for (int i = 0; i < main_scene_->segments_.size(); i++)
-                    {
-                        auto mesh = std::dynamic_pointer_cast<open3d::geometry::TriangleMesh>(main_scene_->segments_[i]);
-
-                        mesh->Scale(1.0 / scale_factor, rotation_center);
-                        auto filename = dir_path / "segments" / ("seg_" + std::to_string(i) + ".obj");
-                        bool flag = open3d::io::WriteTriangleMesh(filename.generic_string(), *mesh);
-                        if (!flag)
+                    auto dir_str = export_dir.result();
+                    gui::Application::GetInstance().PostToMainThread(this, [this, dir_str]()
+                                                                     {
+                        auto dir_path = std::filesystem::path(dir_str);
+                        if (!std::filesystem::exists(dir_path / "segments"))
                         {
-                            std::cout << "Export " << filename.generic_string() << " failed!" << std::endl;
+                            std::filesystem::create_directory(dir_path / "segments");
                         }
-                    }
 
-                    pfd::message("PeelMesh Export Segments", "Export Segments Done!", pfd::choice::ok, pfd::icon::info);
+                        for (int i = 0; i < main_scene_->segments_.size(); i++)
+                        {
+                            auto mesh = std::dynamic_pointer_cast<open3d::geometry::TriangleMesh>(main_scene_->segments_[i]);
+
+                            mesh->Scale(1.0 / scale_factor, rotation_center);
+                            auto filename = dir_path / "segments" / ("seg_" + std::to_string(i) + ".obj");
+                            bool flag = open3d::io::WriteTriangleMesh(filename.generic_string(), *mesh);
+                            if (!flag)
+                            {
+                                std::cout << "Export " << filename.generic_string() << " failed!" << std::endl;
+                            }
+                        }
+
+                        pfd::message("PeelMesh Export Segments", "Export Segments Done!", pfd::choice::ok, pfd::icon::info); });
                 };
 
                 std::thread export_t(func);
-                export_t.join();
+                export_t.detach();
 
+                break;
+            }
+            case EXPORT_ALL_SEGMENTS:
+            {
+                ExportAllSegments();
                 break;
             }
             default:
@@ -432,14 +739,18 @@ namespace peelmesh
 
             instance.AddWindow(win);
 
+            win->TryRestoreSession();
+
             auto menubar = std::make_shared<gui::Menu>();
 
             auto file_menu = std::make_shared<gui::Menu>();
             file_menu->AddItem("Open", OPEN_FILE);
+            file_menu->AddItem("Open Directory", OPEN_DIRECTORY);
             menubar->AddMenu("File", file_menu);
 
             auto export_menu = std::make_shared<gui::Menu>();
             export_menu->AddItem("Export Segments", EXPORT_SEGMENTS);
+            export_menu->AddItem("Export All Segments", EXPORT_ALL_SEGMENTS);
             menubar->AddMenu("Export", export_menu);
             instance.SetMenubar(menubar);
         }
@@ -448,4 +759,4 @@ namespace peelmesh
     };
 }
 
-#endif /* PEELMESH_WINDOW_H */
+#endif /* GALAXY_PEELMESH_WINDOW_H */

@@ -1,8 +1,8 @@
 include(FetchContent)
 
 # Auto-detect pre-downloaded source
-if(NOT PEELMESH_EXT_PYBIND11_SRC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-src/CMakeLists.txt")
-    set(PEELMESH_EXT_PYBIND11_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-src")
+if(NOT PEELMESH_EXT_PYBIND11_SRC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/pybind11-src/CMakeLists.txt")
+    set(PEELMESH_EXT_PYBIND11_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/pybind11-src")
 endif()
 
 if(PEELMESH_EXT_PYBIND11_SRC AND EXISTS ${PEELMESH_EXT_PYBIND11_SRC}/CMakeLists.txt)

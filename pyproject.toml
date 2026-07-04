@@ -14,6 +14,7 @@ license = { file = "LICENSE" }
 [tool.scikit-build]
 # scikit-build-core 会自动调用你的 CMakeLists.txt
 cmake.verbose = true
+cmake.args = ["-T", "v142,host=x64"]
 wheel.expand-macos-universal-tags = true
 
 

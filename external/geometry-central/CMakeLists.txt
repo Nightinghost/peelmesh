@@ -1,13 +1,13 @@
 include(FetchContent)
 
 # Auto-detect pre-downloaded source
-if(NOT PEELMESH_EXT_GEOMETRY_CENTRAL_SRC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../geometry-central-src/CMakeLists.txt")
-    set(PEELMESH_EXT_GEOMETRY_CENTRAL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../geometry-central-src")
+if(NOT PEELMESH_EXT_GEOMETRY_CENTRAL_SRC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/geometry-central-src/CMakeLists.txt")
+    set(PEELMESH_EXT_GEOMETRY_CENTRAL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/geometry-central-src")
 endif()
 
 # Auto-detect pre-downloaded Eigen (used by geometry-central)
-if(NOT GC_EIGEN_LOCATION AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../eigen-src/signature_of_eigen3_matrix_library")
-    set(GC_EIGEN_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../eigen-src")
+if(NOT GC_EIGEN_LOCATION AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/eigen-src/signature_of_eigen3_matrix_library")
+    set(GC_EIGEN_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/eigen-src")
     message(STATUS "Using local Eigen source from: ${GC_EIGEN_LOCATION}")
 endif()
 

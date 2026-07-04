@@ -1,8 +1,12 @@
 include(FetchContent)
 
 # Auto-detect pre-downloaded source
-if(NOT PEELMESH_EXT_FMT_SRC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../fmt-src/CMakeLists.txt")
-    set(PEELMESH_EXT_FMT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../fmt-src")
+if(NOT PEELMESH_EXT_FMT_SRC)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/fmtlib-src/CMakeLists.txt")
+        set(PEELMESH_EXT_FMT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/fmtlib-src")
+    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/fmt-src/CMakeLists.txt")
+        set(PEELMESH_EXT_FMT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/fmt-src")
+    endif()
 endif()
 
 if(PEELMESH_EXT_FMT_SRC AND EXISTS ${PEELMESH_EXT_FMT_SRC}/CMakeLists.txt)
@@ -13,7 +17,7 @@ if(PEELMESH_EXT_FMT_SRC AND EXISTS ${PEELMESH_EXT_FMT_SRC}/CMakeLists.txt)
         SOURCE_DIR "${PEELMESH_EXT_FMT_SRC}"
 
         CMAKE_ARGS
-            -DCMAKE_CXX_STANDARD=${EXTERNAL_CXX_STANDARD}
+        -DCMAKE_CXX_STANDARD=${EXTERNAL_CXX_STANDARD}
 
         OVERRIDE_FIND_PACKAGE
     )

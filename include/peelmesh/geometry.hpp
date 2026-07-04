@@ -1,5 +1,5 @@
-#ifndef PEELMESH_GEOMETRY_H
-#define PEELMESH_GEOMETRY_H
+#ifndef GALAXY_PEELMESH_GEOMETRY_H
+#define GALAXY_PEELMESH_GEOMETRY_H
 
 #include <Eigen/Eigen>
 
@@ -169,6 +169,8 @@ namespace peelmesh
         std::tuple<std::vector<int>, std::vector<int>> GetOneRingNeighborIndicesStartFrom(int center_idx, int first_neighbor_idx);
         std::tuple<std::vector<int>, std::vector<int>> GetOneRingNeighborIndices(int center_idx);
 
+        std::vector<std::vector<int>> GetBoundaryVertices() const;
+
     private:
         void FreeVertex(Vertex *v);
         void FreeHalfEdge(HalfEdge *he);
@@ -203,4 +205,4 @@ namespace peelmesh
     };
 } // namespace peelmesh
 
-#endif /* PEELMESH_GEOMETRY_H */
+#endif /* GALAXY_PEELMESH_GEOMETRY_H */

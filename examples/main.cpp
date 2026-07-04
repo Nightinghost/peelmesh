@@ -43,21 +43,46 @@ void Draw(const peelmesh::TriangleMesh &mesh)
 
 int main()
 {
-    auto mesh = CreateHexagonMeshWithBoundary();
-    Draw(mesh);
+    // auto mesh = CreateHexagonMeshWithBoundary();
+    // Draw(mesh);
 
-    const auto &[n1, n2] = mesh.GetOneRingNeighborIndicesStartFrom(4, 0);
+    // const auto &[n1, n2] = mesh.GetOneRingNeighborIndicesStartFrom(4, 0);
 
-    if (!n1.empty())
+    // if (!n1.empty())
+    // {
+    //     std::cout << "CounterClockWise Neighbors: ";
+    //     std::copy(n1.begin(), n1.end(), std::ostream_iterator<int>(std::cout, " "));
+    //     std::cout << std::endl;
+    // }
+    // if (!n2.empty())
+    // {
+    //     std::cout << "ClockWise Neighbors: ";
+    //     std::copy(n2.begin(), n2.end(), std::ostream_iterator<int>(std::cout, " "));
+    // }
+
+    auto mesh = open3d::io::CreateMeshFromFile("D:/Models/concentric.obj");
+
+    peelmesh::TriangleMesh m_mesh(mesh->vertices_, mesh->triangles_);
+
+    Draw(m_mesh);
+
+    auto boundaries = m_mesh.GetBoundaryVertices();
+
+    std::vector<std::shared_ptr<open3d::geometry::Geometry3D>> geometries;
+    for (const auto &boundary : boundaries)
     {
-        std::cout << "CounterClockWise Neighbors: ";
-        std::copy(n1.begin(), n1.end(), std::ostream_iterator<int>(std::cout, " "));
+        open3d::geometry::LineSet line_set;
+        for (size_t i = 0; i < boundary.size(); i++)
+        {
+            line_set.points_.push_back(mesh->vertices_[boundary[i]]);
+            line_set.lines_.push_back({(int)i, (int)((i + 1) % boundary.size())});
+        }
+        geometries.push_back(std::make_shared<open3d::geometry::LineSet>(line_set));
+
+        std::copy(boundary.begin(), boundary.end(), std::ostream_iterator<int>(std::cout, " "));
         std::cout << std::endl;
     }
-    if (!n2.empty())
-    {
-        std::cout << "ClockWise Neighbors: ";
-        std::copy(n2.begin(), n2.end(), std::ostream_iterator<int>(std::cout, " "));
-    }
+    open3d::visualization::DrawGeometries({geometries.begin(), geometries.end()});
+
     return 0;
 }
